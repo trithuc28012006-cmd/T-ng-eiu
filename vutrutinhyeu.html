@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Master of the Universe - Smooth Version</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            cursor: grab;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body:active {
+            cursor: grabbing;
+        }
+
+        /* Màn hình Loading */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1s ease;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #333;
+            border-top: 3px solid #ff3399;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #info {
+            position: absolute;
+            top: 30px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            pointer-events: none;
+            z-index: 10;
+            opacity: 0;
+            transition: 2s;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="loading-screen">
+        <div class="loader"></div>
+        <div style="color: #ff99cc; letter-spacing: 2px;">Đang khởi tạo vũ trụ tình yêu...</div>
+    </div>
+
+    <div id="info">
+        <h1 style="letter-spacing: 5px; margin: 0; color: #ff99cc; text-shadow: 0 0 20px #ff3399;">100 DAYS OF LOVE</h1>
+        <p style="color: #ffd1dc;">Tình yêu của anh to lớn hơn cả vũ trụ</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 3000);
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" }); // Tắt antialias để mượt hơn
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Giới hạn pixel ratio để giảm tải
+        document.body.appendChild(renderer.domElement);
+
+        const masterGroup = new THREE.Group();
+        scene.add(masterGroup);
+
+        // Quản lý Loading
+        const loadingManager = new THREE.LoadingManager();
+        loadingManager.onLoad = () => {
+            const screen = document.getElementById('loading-screen');
+            screen.style.opacity = '0';
+            setTimeout(() => {
+                screen.style.display = 'none';
+                document.getElementById('info').style.opacity = '1';
+            }, 1000);
+        };
+
+        const loader = new THREE.TextureLoader(loadingManager);
+
+        // --- 1. SAO NỀN (Giảm số lượng một chút để mượt hơn) ---
+        const bgGeo = new THREE.BufferGeometry();
+        const bgPos = new Float32Array(8000 * 3);
+        for (let i = 0; i < 24000; i++) bgPos[i] = (Math.random() - 0.5) * 1500;
+        bgGeo.setAttribute('position', new THREE.BufferAttribute(bgPos, 3));
+        masterGroup.add(new THREE.Points(bgGeo, new THREE.PointsMaterial({ size: 0.2, color: 0xffffff, transparent: true, opacity: 0.6 })));
+
+        // --- 2. MẶT TRỜI ---
+        const sunContainer = new THREE.Group();
+        const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({
+            map: loader.load('https://threejs.org/examples/textures/lensflare/lensflare0.png'),
+            color: 0xffbb33, transparent: true, blending: THREE.AdditiveBlending
+        }));
+        sunGlow.scale.set(180, 180, 1);
+        sunContainer.add(new THREE.Mesh(new THREE.SphereGeometry(15, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffff }))); // Giảm polygon
+        sunContainer.add(sunGlow);
+        sunContainer.position.set(-150, 100, -200);
+        masterGroup.add(sunContainer);
+
+        // --- 3. TRÁI TIM ---
+        const heartCount = 3000; // Giảm bớt hạt để mượt
+        const heartGeo = new THREE.BufferGeometry();
+        const hTarget = new Float32Array(heartCount * 3), hOrigin = new Float32Array(heartCount * 3), hCurrent = new Float32Array(heartCount * 3);
+        for (let i = 0; i < heartCount; i++) {
+            hOrigin[i * 3] = (Math.random() - 0.5) * 150; hOrigin[i * 3 + 1] = (Math.random() - 0.5) * 150; hOrigin[i * 3 + 2] = (Math.random() - 0.5) * 150;
+            const t = Math.random() * Math.PI * 2;
+            hTarget[i * 3] = 16 * Math.pow(Math.sin(t), 3) * 0.8;
+            hTarget[i * 3 + 1] = (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * 0.8;
+            hTarget[i * 3 + 2] = (Math.random() - 0.5) * 5;
+        }
+        heartGeo.setAttribute('position', new THREE.BufferAttribute(hCurrent, 3));
+        masterGroup.add(new THREE.Points(heartGeo, new THREE.PointsMaterial({ size: 0.4, color: 0xff0066, blending: THREE.AdditiveBlending })));
+
+        // --- 4. QUẢ CẦU ẢNH ---
+        const photoGroup = new THREE.Group();
+        const imgLinks = [
+            'IMG/1.jpg', 'IMG/2.jpg', 'IMG/3.jpg', 'IMG/4.jpg', 'IMG/5.jpg',
+            'IMG/6.jpg', 'IMG/7.jpg', 'IMG/8.jpg', 'IMG/9.jpg', 'IMG/10.jpg',
+            'IMG/11.jpg', 'IMG/12.jpg', 'IMG/13.jpg', 'IMG/14.jpg', 'IMG/15.jpg',
+            'IMG/16.jpg', 'IMG/17.jpg', 'IMG/18.jpg', 'IMG/19.jpg', 'IMG/20.jpg',
+            'IMG/21.jpg', 'IMG/22.jpg', 'IMG/23.jpg', 'IMG/24.jpg', 'IMG/25.jpg',
+            'IMG/26.jpg', 'IMG/27.jpg', 'IMG/28.jpg',
+            'IMG/29.jpg', 'IMG/30.jpg', 'IMG/31.jpg', 'IMG/32.jpg', 'IMG/33.jpg',
+            'IMG/34.jpg', 'IMG/35.jpg', 'IMG/36.jpg', 'IMG/37.jpg', 'IMG/38.jpg', 'IMG/39.jpg', 'IMG/40.jpg', 'IMG/41.jpg'
+        ];
+
+        const photoMeshes = [];
+        imgLinks.forEach((url, i) => {
+            loader.load(url, (texture) => {
+                const mesh = new THREE.Mesh(
+                    new THREE.PlaneGeometry(8, 10),
+                    new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide })
+                );
+                const phi = Math.acos(-1 + (2 * i) / imgLinks.length);
+                const theta = Math.sqrt(imgLinks.length * Math.PI) * phi;
+                mesh.position.set(28 * Math.cos(theta) * Math.sin(phi), 28 * Math.sin(theta) * Math.sin(phi), 28 * Math.cos(phi));
+                mesh.lookAt(0, 0, 0);
+                photoGroup.add(mesh);
+                photoMeshes.push(mesh);
+            });
+        });
+        masterGroup.add(photoGroup);
+        camera.position.z = 80;
+
+        // --- 5. OVERLAY UI (GIẢI PHÁP MƯỢT NHẤT) ---
+        const overlay = document.createElement('div');
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:none; justify-content:center; align-items:center; z-index:1000; cursor:pointer; opacity:0; transition:0.4s;";
+        const fullImg = document.createElement('img');
+        fullImg.style.cssText = "max-width:85%; max-height:85%; border:4px solid #fff; border-radius:10px; transform:scale(0.8); transition:0.4s;";
+        overlay.appendChild(fullImg);
+        document.body.appendChild(overlay);
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        window.addEventListener('click', (e) => {
+            if (isMoved) return;
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(photoGroup.children);
+            if (intersects.length > 0) {
+                fullImg.src = intersects[0].object.material.map.image.src;
+                overlay.style.display = 'flex';
+                setTimeout(() => { overlay.style.opacity = '1'; fullImg.style.transform = 'scale(1)'; }, 10);
+            }
+        });
+
+        overlay.addEventListener('click', () => {
+            overlay.style.opacity = '0';
+            fullImg.style.transform = 'scale(0.8)';
+            setTimeout(() => overlay.style.display = 'none', 400);
+        });
+
+        // --- 6. ĐIỀU KHIỂN XOAY ---
+        let isDragging = false, isMoved = false, prevMouse = { x: 0, y: 0 };
+        document.addEventListener('mousedown', (e) => { isDragging = true; isMoved = false; prevMouse = { x: e.clientX, y: e.clientY }; });
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                isMoved = true;
+                masterGroup.rotation.y += (e.clientX - prevMouse.x) * 0.005;
+                masterGroup.rotation.x += (e.clientY - prevMouse.y) * 0.005;
+                prevMouse = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        // --- 7. ANIMATION (TỐI ƯU FPS) ---
+        let time = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+            time += 0.005;
+            sunGlow.scale.set(180 + Math.sin(time * 2) * 15, 180 + Math.sin(time * 2) * 15, 1);
+
+            const p = heartGeo.attributes.position.array;
+            const f = (Math.sin(time) + 1) * 0.5;
+            for (let i = 0; i < heartCount * 3; i++) {
+                p[i] += ((hOrigin[i] + (hTarget[i] - hOrigin[i]) * f) - p[i]) * 0.08;
+            }
+            heartGeo.attributes.position.needsUpdate = true;
+
+            if (!isDragging) masterGroup.rotation.y += 0.001;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+
+</html>
